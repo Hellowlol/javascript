@@ -1,11 +1,13 @@
-# Airbnb JavaScript Style Guide() {
+# Ian's JavaScript Style Guide() {
 
 *A mostly reasonable approach to JavaScript*
 
+Based on [the Airbnb style guide](https://github.com/airbnb/javascript) and just slightly the [Mozilla Coding Style Guide](https://developer.mozilla.org/en-US/docs/Developer_Guide/Coding_Style).  Customized by/for Ian Bicking.
 
 ## <a name='TOC'>Table of Contents</a>
 
   1. [Types](#types)
+  1. [undefined](#undefined)
   1. [Objects](#objects)
   1. [Arrays](#arrays)
   1. [Strings](#strings)
@@ -70,6 +72,43 @@
 
     **[[⬆]](#TOC)**
 
+## <a name='undefined'>undefined</a>
+
+  - `undefined` is an object.  You should use it as an object.  You can test for it.  For instance:
+  
+    ```javascript
+    // good
+    function pow(a, b) {
+      if (b === undefined) {
+        b = 1;
+      }
+      return Math.pow(a, b);
+    }
+
+    // bad
+    function pow(a, b) {
+      if (typeof b == "undefined") {
+        b = 1;
+      }
+      return Math.pow(a, b);
+    }
+    ```
+    
+  - *Only* use `typeof x == "undefined"` when the variable (`x`) may not be declared, and it would be an error to test `x === undefined`:
+  
+    ```javascript
+    if (typeof Module == "undefined") {
+      Module = {};
+    }
+
+    // But also okay, for browser-only code:
+    if (window.Module === undefined) {
+      Module = {};
+    }
+    ```
+    
+    Note that you can't use `window` in Node.js; if you think your code could be used in a server context you should use the first form.
+
 ## <a name='objects'>Objects</a>
 
   - Use the literal syntax for object creation.
@@ -82,23 +121,10 @@
     var item = {};
     ```
 
-  - Don't use [reserved words](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words) as keys.
+  - You *may use* [reserved words](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Reserved_Words) as keys.
+    
+    As an example that reserved words are both okay *right now* and will be indefinitely, the [IndexedDB API](https://developer.mozilla.org/en-US/docs/IndexedDB/Using_IndexedDB) uses `cursor.continue()`
 
-    ```javascript
-    // bad
-    var superman = {
-      class: 'superhero',
-      default: { clark: 'kent' },
-      private: true
-    };
-
-    // good
-    var superman = {
-      klass: 'superhero',
-      defaults: { clark: 'kent' },
-      hidden: true
-    };
-    ```
     **[[⬆]](#TOC)**
 
 ## <a name='arrays'>Arrays</a>
@@ -142,28 +168,23 @@
     itemsCopy = Array.prototype.slice.call(items);
     ```
 
+  - If you want to use the value of `arguments` anywhere, as a list, turn it into a real Array using Array#slice.
+  
+    ```javascript
+    function applyall(func) {
+      var rest = Array.prototype.slice.call(arguments, 1);
+      rest.map(func);
+    }
+    ```
+
     **[[⬆]](#TOC)**
 
 
 ## <a name='strings'>Strings</a>
 
-  - Use single quotes `''` for strings
+  - Use single or double quotes (`'` or `"`) for strings.  There is a slight preference for double-quotes, aligning with Mozilla style.
 
-    ```javascript
-    // bad
-    var name = "Bob Parr";
-
-    // good
-    var name = 'Bob Parr';
-
-    // bad
-    var fullName = "Bob " + this.lastName;
-
-    // good
-    var fullName = 'Bob ' + this.lastName;
-    ```
-
-  - Strings longer than 80 characters should be written across multiple lines using string concatenation.
+  - Strings longer than 80 characters should be written across multiple lines using string concatenation.  (FIXME: I can't decide how much I care)
   - Note: If overused, long strings with concatenation could impact performance. [jsPerf](http://jsperf.com/ya-string-concat) & [Discussion](https://github.com/airbnb/javascript/issues/40)
 
     ```javascript
@@ -240,7 +261,7 @@
 
     ```javascript
     // anonymous function expression
-    var anonymous = function() {
+    var anonymous = function () {
       return true;
     };
 
@@ -250,7 +271,7 @@
     };
 
     // immediately-invoked function expression (IIFE)
-    (function() {
+    (function () {
       console.log('Welcome to the Internet. Please follow me.');
     })();
     ```
@@ -324,6 +345,12 @@
     var isJedi = getProp('jedi');
     ```
 
+  - Also use subscript notation when accessing a property that is not a valid identifier.
+  
+    ```javascript
+    var preferredName = props['preferred-name'];
+    ```
+
     **[[⬆]](#TOC)**
 
 
@@ -339,40 +366,18 @@
     var superPower = new SuperPower();
     ```
 
-  - Use one `var` declaration for multiple variables and declare each variable on a newline.
+  - Use a separate `var` declaration for each variable.  This allows variable declarations to be individually reordered or deleted.
 
     ```javascript
-    // bad
+    // good
     var items = getItems();
     var goSportsTeam = true;
     var dragonball = 'z';
 
-    // good
+    // bad
     var items = getItems(),
         goSportsTeam = true,
         dragonball = 'z';
-    ```
-
-  - Declare unassigned variables last. This is helpful when later on you might need to assign a variable depending on one of the previous assigned variables.
-
-    ```javascript
-    // bad
-    var i, len, dragonball,
-        items = getItems(),
-        goSportsTeam = true;
-
-    // bad
-    var i, items = getItems(),
-        dragonball,
-        goSportsTeam = true,
-        len;
-
-    // good
-    var items = getItems(),
-        goSportsTeam = true,
-        dragonball,
-        length,
-        i;
     ```
 
   - Assign variables at the top of their scope. This helps avoid issues with variable declaration and assignment hoisting related issues.
@@ -431,6 +436,13 @@
 
       return true;
     }
+    ```
+
+  - As an exception, declaring a variable in a `for` loop is common and okay.
+  
+    ```javascript
+    // ok
+    for (var i=0; i<array.length; i++) {...}
     ```
 
     **[[⬆]](#TOC)**
@@ -529,7 +541,7 @@
 
 ## <a name='conditionals'>Conditional Expressions & Equality</a>
 
-  - Use `===` and `!==` over `==` and `!=`.
+  - Use `===` and `!==` over `==` and `!=`.  This is not a hard requirement, except when comparing something specifically against `0`, `null` or `undefined`.  (The Mozilla guide specifically discourages `===`, so I'm landing somewhere in between.)
   - Conditional expressions are evaluated using coercion with the `ToBoolean` method and always follow these simple rules:
 
     + **Objects** evaluate to **true**
@@ -577,14 +589,14 @@
 
 ## <a name='blocks'>Blocks</a>
 
-  - Use braces with all multi-line blocks.
+  - Use braces with *all* blocks.
 
     ```javascript
     // bad
     if (test)
       return false;
 
-    // good
+    // bad
     if (test) return false;
 
     // good
@@ -592,8 +604,8 @@
       return false;
     }
 
-    // bad
-    function() { return false; }
+    // usually bad (sometimes fine, like in a call to Array#filter)
+    function () { return false; }
 
     // good
     function() {
@@ -606,7 +618,7 @@
 
 ## <a name='comments'>Comments</a>
 
-  - Use `/** ... */` for multiline comments. Include a description, specify types and values for all parameters and return values.
+  - Use `/** ... */` for multiline comments, especially documentation. Include a description, specify types and values for all parameters and return values.  For commentary or FIXMEs this is less of a concern.
 
     ```javascript
     // bad
@@ -622,7 +634,7 @@
       return element;
     }
 
-    // good
+    // good FIXME: not sure if I care about leading *'s
     /**
      * make() returns a new element
      * based on the passed in tag name
@@ -638,7 +650,7 @@
     }
     ```
 
-  - Use `//` for single line comments. Place single line comments on a newline above the subject of the comment. Put an emptyline before the comment.
+  - Use `//` for single line comments. Place single line comments on a newline above the subject of the comment.  End a comment in `:` to make it clear what the subject of the comment is.
 
     ```javascript
     // bad
@@ -653,23 +665,21 @@
       console.log('fetching type...');
       // set the default type to 'no type'
       var type = this._type || 'no type';
-
       return type;
     }
 
     // good
     function getType() {
       console.log('fetching type...');
-
-      // set the default type to 'no type'
+      // set the default type to 'no type':
       var type = this._type || 'no type';
-
       return type;
     }
     ```
 
     **[[⬆]](#TOC)**
 
+  - Use `// FIXME ...` liberally.  Sometimes you are focused on one thing while coding, and want to avoid getting distracted by another issue, but you sense the issue exists: it is better to put in a FIXME note than to leave it forgotten.  But do try to delete obsolete FIXMEs.
 
 ## <a name='whitespace'>Whitespace</a>
 
@@ -764,6 +774,16 @@
         .call(tron.led);
     ```
 
+  - Always put a space after `function` (you wouldn't do `while(x) {...}`, would you?)
+  
+    ```javascript
+    // bad
+    el.addEventListener(function() {...});
+
+    // good
+    el.addEventListener(function () {...});
+    ```
+
     **[[⬆]](#TOC)**
 
 ## <a name='leading-commas'>Leading Commas</a>
@@ -836,7 +856,7 @@
     ```javascript
     //  => this.reviewScore = 9;
 
-    // bad
+    // bad FIXME: not sure why this is bad
     var totalScore = this.reviewScore + '';
 
     // good
@@ -849,7 +869,7 @@
     var totalScore = this.reviewScore + ' total score';
     ```
 
-  - Use `parseInt` for Numbers and always with a radix for type casting.
+  - Use `parseInt` for Numbers and always with a radix for type casting, like `parseInt(x, 10)`, never `parseInt(x)`.
   - If for whatever reason you are doing something wild and `parseInt` is your bottleneck and need to use Bitshift for [performance reasons](http://jsperf.com/coercion-vs-casting/3), leave a comment explaining why and what you're doing.
 
     ```javascript
@@ -890,7 +910,7 @@
     // bad
     var hasAge = new Boolean(age);
 
-    // good
+    // iffy
     var hasAge = Boolean(age);
 
     // good
@@ -922,6 +942,7 @@
     // bad
     var OBJEcttsssss = {};
     var this_is_my_object = {};
+    // so bad it's just silly
     var this-is-my-object = {};
     function c() {};
     var u = new user({
@@ -969,10 +990,10 @@
     this._firstName = 'Panda';
     ```
 
-  - When saving a reference to `this` use `_this`.
+  - When saving a reference to `this` use `_this` or `self` FIXME: only `_this`?
 
     ```javascript
-    // bad
+    // ok?
     function() {
       var self = this;
       return function() {
@@ -997,7 +1018,7 @@
     }
     ```
 
-  - Name your functions. This is helpful for stack traces.
+  - Name your functions. This is helpful for stack traces.  FIXME: I don't know if it really matters.  In the browser stack traces give line numbers, the name isn't that big of a deal.
 
     ```javascript
     // bad
@@ -1009,6 +1030,21 @@
     var log = function log(msg) {
       console.log(msg);
     };
+    ```
+
+  - Name your functions if they are self-recursive.
+  
+    ```javascript
+    $.ajax({
+      success: function success(result) {
+        if (Array.isArray(result)) {
+          result.forEach(function (item) {
+            success(item);
+          });
+        }
+        // normal behavior...
+      }
+    });
     ```
 
     **[[⬆]](#TOC)**
@@ -1070,43 +1106,54 @@
 
 ## <a name='constructors'>Constructors</a>
 
-  - Assign methods to the prototype object, instead of overwriting the prototype with a new object. Overwriting the prototype makes inheritance impossible: by resetting the prototype you'll overwrite the base!
-
+  - Prefer [Object.create](https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Object/create) over the `new` operator.
+  
     ```javascript
-    function Jedi() {
-      console.log('new jedi');
-    }
-
-    // bad
-    Jedi.prototype = {
-      fight: function fight() {
-        console.log('fighting');
-      },
-
-      block: function block() {
-        console.log('blocking');
-      }
+    var MyClass = function () {
+      var obj = Object.create(Class.prototype);
+      obj.constructor.apply(obj, arguments);
+      return obj;
     };
-
-    // good
-    Jedi.prototype.fight = function fight() {
-      console.log('fighting');
-    };
-
-    Jedi.prototype.block = function block() {
-      console.log('blocking');
-    };
+    MyClass.prototype = {...};
     ```
 
-  - Methods can return `this` to help with method chaining.
+    This is essentially equivalent to what `new` does, but is less error-prone (you can't call it incorrectly), and easier to work with when defining different object layouts.  I prefer this class pattern:
+    
+    ```javascript
+    function Class(super, properties) {
+      // The case when there is no superclass:
+      var prototype = super;
+      // Otherwise:
+      if (properties) {
+        prototype = Object.create(super);
+        for (var a in properties) {
+          if (properties.hasOwnProperty(a)) {
+            prototype[a] = properties[a];
+          }
+        }
+      }
+      return function () {
+        var obj = Objet.create(prototype);
+        obj.constructor.apply(this, arguments);
+        return obj;
+      };
+    }
+
+    MyClass = Class({
+      constructor: function (...) {...}
+    });
+    ```
+
+  - Methods can return `this` to help with method chaining.  Or not, whatever.
 
     ```javascript
-    // bad
+    // bad (the return is pointless!)
     Jedi.prototype.jump = function() {
       this.jumping = true;
       return true;
     };
 
+    // fine
     Jedi.prototype.setHeight = function(height) {
       this.height = height;
     };
@@ -1115,7 +1162,7 @@
     luke.jump(); // => true
     luke.setHeight(20) // => undefined
 
-    // good
+    // maybe better
     Jedi.prototype.jump = function() {
       this.jumping = true;
       return this;
@@ -1149,14 +1196,15 @@
       return 'Jedi - ' + this.getName();
     };
     ```
+    
+    You may also wish to write a `.toSource()` method, which is a rough convention for a "programmer friendly" representation of the object.
 
     **[[⬆]](#TOC)**
 
 
 ## <a name='modules'>Modules</a>
 
-  - The module should start with a `!`. This ensures that if a malformed module forgets to include a final semicolon there aren't errors in production when the scripts get concatenated.
-  - The file should be named with camelCase, live in a folder with the same name, and match the name of the single export.
+  - The file should be named with camelCase, and match the name of the single export (if not using a loader like require.js).
   - Add a method called noConflict() that sets the exported module to the previous version and returns this one.
   - Always declare `'use strict';` at the top of the module.
 
@@ -1181,12 +1229,27 @@
     }(this);
     ```
 
+  - Alternately when using [requirejs](http://requirejs.org/) or generally AMD-style modules, define your module like so:
+  
+    ```javascript
+    // in myModule.js
+    define(["prereq"], function (prereq) {
+      var myModule = {};
+      myModule.foo = ...
+      return myModule;
+    });
+    ```
+
+    That is, create a single object that you return, which is named after the module.  Then `myModule.foo` will go by exactly that name in all locations, including where it is used and defined.
+    
+    Do not include the name of the module in the `define()` call.
+
     **[[⬆]](#TOC)**
 
 
 ## <a name='jquery'>jQuery</a>
 
-  - Prefix jQuery object variables with a `$`.
+  - Prefix jQuery object variables with a `$`.  FIXME: can't decide if I care
 
     ```javascript
     // bad
