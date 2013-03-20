@@ -1243,6 +1243,41 @@ Based on [the Airbnb style guide](https://github.com/airbnb/javascript) and just
     That is, create a single object that you return, which is named after the module.  Then `myModule.foo` will go by exactly that name in all locations, including where it is used and defined.
     
     Do not include the name of the module in the `define()` call.
+    
+  - Sometimes you need to create a module-system-neutral module.  There are two approaches, depending on whether you
+    have dependencies.  No dependencies:
+
+    ```javascript
+    (function () {
+    var myLibrary = {...};
+    
+    if (typeof define != "undefined") {
+      // You can probably determine this statically:
+      if (typeof myLibrary == "function") {
+        define([], function () {return myLibrary;});
+      } else {
+        define([], myLibrary});
+      }
+    } else {
+      window.myLibrary = myLibrary;
+    }
+    
+    })();
+
+    Or if you have dependencies:
+    
+    ```javascript
+    (function () {
+    function init($) {
+      return {my library object};
+    }
+    if (typeof define != "undefined") {
+      define(["jquery"], init);
+    } else {
+      window.myLibrary = init(jQuery);
+    }
+    })();
+    ```
 
     **[[⬆]](#TOC)**
 
