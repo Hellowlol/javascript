@@ -1263,6 +1263,7 @@ Based on [the Airbnb style guide](https://github.com/airbnb/javascript) and just
     }
     
     })();
+    ```
 
     Or if you have dependencies:
     
