@@ -25,6 +25,7 @@ Based on [the Airbnb style guide](https://github.com/airbnb/javascript) and just
   1. [Naming Conventions](#naming-conventions)
   1. [Accessors](#accessors)
   1. [Constructors](#constructors)
+  1. [JSHint](#jshint)
   1. [Modules](#modules)
   1. [jQuery](#jquery)
   1. [ES5 Compatibility](#es5)
@@ -1200,6 +1201,33 @@ Based on [the Airbnb style guide](https://github.com/airbnb/javascript) and just
     You may also wish to write a `.toSource()` method, which is a rough convention for a "programmer friendly" representation of the object.
 
     **[[⬆]](#TOC)**
+
+
+## <a name='jshint'>JSHint</a>
+
+  - The code should be clean with JSHint.
+  - JSHint is kind of tedious about variable declarations.  It doesn't like this, for instance:
+  
+    ```javascript
+    try {
+      var foo = bar();
+    } catch (e) {
+      throw 'Foo';
+    }
+    foo.method();
+    ```
+
+    JSHint doesn't like this, it will claim that `foo` is used out of scope.  This is silly, but we fix it anyway just to get JSHint off our backs.
+  - `.jshintrc` can have these options (consider this a suggestion, more than a requirement):
+  
+    ```json
+    {
+      "curly": true,
+      "noarg": true,
+      "bitwise": true,
+      "es5": true
+    }
+    ```
 
 
 ## <a name='modules'>Modules</a>
